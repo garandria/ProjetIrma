@@ -76,7 +76,7 @@ bp
 
 
 
-N_TRAINING = 600
+N_TRAINING = 1000
 
 # splitdf function will return a list of training and testing sets
 splitdf <- function(dataframe, seed=NULL) {
@@ -118,7 +118,7 @@ plotFtImportance <- function(rtree) {
                y = reorder(variable, importance))) +
     geom_point() +
     labs(title = "Importance of configuration options ",
-         subtitle = "(20 most relevant, Rpart, scaled to sum 1)") +
+         subtitle = "(20 most relevant scaled to sum 1)") +
     theme_bw() +
     theme(axis.title.y = element_blank(),
           plot.title = element_text(hjust = 0.5),
@@ -142,32 +142,32 @@ predComputation <- function(iris) {
   testing <- splits$testset
   
   rtree <- # mkBoosting(training)
-    mkRandomForest(training)
-    # KERNEL_SIZE~CONFIG_DEBUG_INFO+CONFIG_DRM_UDL
-    # KERNEL_SIZE~.-COMPILE_TIME
-    # rpart(KERNEL_SIZE~CONFIG_SFC_FALCON+CONFIG_SENSORS_LTC4245+CONFIG_DEBUG_INFO_REDUCED+CONFIG_KEYBOARD_DLINK_DIR685+CONFIG_DEBUG_INFO_SPLIT+CONFIG_SENSORS_TMP103
+    #mkRandomForest(training)
+    # KERNEL_SIZE~CONFIG_SFC_FALCON+CONFIG_SENSORS_LTC4245+CONFIG_DEBUG_INFO_REDUCED+CONFIG_KEYBOARD_DLINK_DIR685+CONFIG_DEBUG_INFO_SPLIT+CONFIG_SENSORS_TMP103
     #       +CONFIG_SND_OSSEMUL+CONFIG_SOUND_OSS_CORE+                                    
     #       CONFIG_SCSI_FUTURE_DOMAIN+CONFIG_NET_VENDOR_NVIDIA+CONFIG_MEGARAID_LEGACY+CONFIG_UBSAN_SANITIZE_ALL                                 
     #       +CONFIG_DEBUG_INFO+CONFIG_GDB_SCRIPTS+CONFIG_ROCKETPORT+CONFIG_HID_SENSOR_HUMIDITY+CONFIG_REGULATOR_LP873X+CONFIG_ACPI_CMPC
     #       +CONFIG_MODULES+CONFIG_STRICT_MODULE_RWX+CONFIG_RANDOMIZE_BASE+CONFIG_X86_NEED_RELOCS+CONFIG_SCSI_CXGB3_ISCSI+CONFIG_RTLWIFI
-    #       , data=training,
-    #   method = "anova",
-    #   parms = list(split = "information"),
-    #    control = rpart.control(minsplit = 2,
-    #                            minbucket = 8,
-    #   #                         #maxdepth = maxDepth,
-    #   #                         #cp = complexity,
-    #                            usesurrogate = 0,
-    #                            maxsurrogate = 0)
-    #  )
+    #     
+    # KERNEL_SIZE~.-COMPILE_TIME
+    rpart(KERNEL_SIZE~.-COMPILE_TIME, data=training,
+      method = "anova",
+      parms = list(split = "information"),
+       control = rpart.control(minsplit = 2,
+                               minbucket = 8,
+      #                         #maxdepth = maxDepth,
+      #                         #cp = complexity,
+                               usesurrogate = 0,
+                               maxsurrogate = 0)
+     )
 
-  #rpart.plot(rtree)
-  # plotFtImportance(rtree)
-  imp <- varImp(rtree)
-  varImpPlot(rtree)
-  plot(rtree)
-  print(plot_min_depth_distribution(rtree))
-  print(plot_multi_way_importance(rtree, size_measure = "no_of_nodes"))
+  rpart.plot(rtree)
+  plotFtImportance(rtree)
+  # imp <- varImp(rtree)
+  #varImpPlot(rtree)
+  #plot(rtree)
+  #print(plot_min_depth_distribution(rtree))
+  #print(plot_multi_way_importance(rtree, size_measure = "no_of_nodes"))
   # print(plot_min_depth_interactions(rtree))
   # print (rownames(imp)[order(imp$Overall, decreasing=TRUE)])
   
