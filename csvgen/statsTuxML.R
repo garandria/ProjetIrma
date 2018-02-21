@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #   Copyright 2018 TuxML Team
 #
 #   Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,8 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-=======
->>>>>>> 48a1dddd0a0c8d66d7b16ba305d3ef3a8c338f1a
 library(ggplot2)
 library(readr)
 library(rpart)
@@ -26,7 +23,7 @@ library(dplyr)
 library(randomForestExplainer)
 
 # TODO we assume that a res.csv exists (typically a CSV extracted from the database)
-res <- read.csv("/Users/macher1/Documents/SANDBOX/csvTuxml/ProjetIrma/csvgen/res3.csv") 
+res <- read.csv("/Users/macher1/Documents/SANDBOX/csvTuxml/ProjetIrma/csvgen/res3.csv")
 res <- res[-c(21, 22), ] # HACK: we should actually delete this entry in the databse
 
 res$KERNEL_SIZE <- res$KERNEL_SIZE / 1048576
@@ -34,25 +31,25 @@ res$KERNEL_SIZE <- res$KERNEL_SIZE / 1048576
 # res <- res[20:nrow(res),]
 
 print(paste("configuration options", ncol(res)))
-print(paste("number of configs", nrow(res))) 
+print(paste("number of configs", nrow(res)))
 
 myes <- apply(res, MARGIN = 1, FUN = function(x) length(x[x == "m"]))
 smyes <- summary(myes)
-print(paste("average number of m", smyes['Mean'])) 
-print(paste("min number of m", min(myes))) 
-print(paste("max number of m", max(myes))) 
+print(paste("average number of m", smyes['Mean']))
+print(paste("min number of m", min(myes)))
+print(paste("max number of m", max(myes)))
 
 nyes <- apply(res, MARGIN = 1, FUN = function(x) length(x[x == "y"]))
 syes <- summary(nyes)
-print(paste("average number of yes", syes['Mean'])) 
-print(paste("min number of yes", min(nyes))) 
-print(paste("max number of yes", max(nyes))) 
+print(paste("average number of yes", syes['Mean']))
+print(paste("min number of yes", min(nyes)))
+print(paste("max number of yes", max(nyes)))
 
 nyesAndM <- apply(res, MARGIN = 1, FUN = function(x) length(x[x == "y" | x == "m"]))
 syesAndM <- summary(nyesAndM)
-print(paste("average number of yes/m", syesAndM['Mean'])) 
-print(paste("min number of yes/m", min(nyesAndM))) 
-print(paste("max number of yes/m", max(nyesAndM))) 
+print(paste("average number of yes/m", syesAndM['Mean']))
+print(paste("min number of yes/m", min(nyesAndM)))
+print(paste("max number of yes/m", max(nyesAndM)))
 
 
 
@@ -60,7 +57,7 @@ print(paste("max number of yes/m", max(nyesAndM)))
 
 comptime <- res$COMPILE_TIME
 
-ksize <- res$KERNEL_SIZE 
+ksize <- res$KERNEL_SIZE
 #print("Kernel sizes in Mo")
 #print(ksize)
 
@@ -111,8 +108,8 @@ NTREE = 1000
 mkRandomForest <- function(dat) {
   # mtry <- (ncol(dat) - 7) # 7: because we excluse non predictor variables! => BAGGING (m=p)
   return (randomForest (KERNEL_SIZE~CONFIG_SFC_FALCON+CONFIG_SENSORS_LTC4245+CONFIG_DEBUG_INFO_REDUCED+CONFIG_KEYBOARD_DLINK_DIR685+CONFIG_DEBUG_INFO_SPLIT+CONFIG_SENSORS_TMP103
-                        +CONFIG_SND_OSSEMUL+CONFIG_SOUND_OSS_CORE+                                    
-                          CONFIG_SCSI_FUTURE_DOMAIN+CONFIG_NET_VENDOR_NVIDIA+CONFIG_MEGARAID_LEGACY+CONFIG_UBSAN_SANITIZE_ALL                                 
+                        +CONFIG_SND_OSSEMUL+CONFIG_SOUND_OSS_CORE+
+                          CONFIG_SCSI_FUTURE_DOMAIN+CONFIG_NET_VENDOR_NVIDIA+CONFIG_MEGARAID_LEGACY+CONFIG_UBSAN_SANITIZE_ALL
                         +CONFIG_DEBUG_INFO+CONFIG_GDB_SCRIPTS+CONFIG_ROCKETPORT+CONFIG_HID_SENSOR_HUMIDITY+CONFIG_REGULATOR_LP873X+CONFIG_ACPI_CMPC
                         +CONFIG_MODULES+CONFIG_STRICT_MODULE_RWX+CONFIG_RANDOMIZE_BASE+CONFIG_X86_NEED_RELOCS+CONFIG_SCSI_CXGB3_ISCSI+CONFIG_RTLWIFI
                         , data=dat,importance=TRUE,ntree=NTREE,keep.forest=TRUE,na.action=na.exclude))
@@ -120,13 +117,13 @@ mkRandomForest <- function(dat) {
 
 mkBoosting <- function(dat) {
   return(
-    gbm(KERNEL_SIZE~.-COMPILE_TIME, 
+    gbm(KERNEL_SIZE~.-COMPILE_TIME,
         data=dat,distribution="gaussian",n.tree=100)
   )
 }
 
 plotFtImportance <- function(rtree) {
-  
+
   impPlot <- rtree$variable.importance %>%
     data_frame(variable = names(.), importance = .) %>%
     mutate(importance = importance / sum(importance)) %>%
@@ -145,26 +142,26 @@ plotFtImportance <- function(rtree) {
     geom_segment(aes(x = -Inf, y = reorder(variable, importance),
                      xend = importance, yend = reorder(variable, importance)),
                  size = 0.2)
-  
+
   print(impPlot)
 }
 
 predComputation <- function(iris) {
-  
+
   #apply the function
   splits <- splitdf(iris)
-  
+
   # save the training and testing sets as data frames
   training <- splits$trainset
   testing <- splits$testset
-  
+
   rtree <- # mkBoosting(training)
     mkRandomForest(training)
     # KERNEL_SIZE~CONFIG_DEBUG_INFO+CONFIG_DRM_UDL
     # KERNEL_SIZE~.-COMPILE_TIME
     # rpart(KERNEL_SIZE~CONFIG_SFC_FALCON+CONFIG_SENSORS_LTC4245+CONFIG_DEBUG_INFO_REDUCED+CONFIG_KEYBOARD_DLINK_DIR685+CONFIG_DEBUG_INFO_SPLIT+CONFIG_SENSORS_TMP103
-    #       +CONFIG_SND_OSSEMUL+CONFIG_SOUND_OSS_CORE+                                    
-    #       CONFIG_SCSI_FUTURE_DOMAIN+CONFIG_NET_VENDOR_NVIDIA+CONFIG_MEGARAID_LEGACY+CONFIG_UBSAN_SANITIZE_ALL                                 
+    #       +CONFIG_SND_OSSEMUL+CONFIG_SOUND_OSS_CORE+
+    #       CONFIG_SCSI_FUTURE_DOMAIN+CONFIG_NET_VENDOR_NVIDIA+CONFIG_MEGARAID_LEGACY+CONFIG_UBSAN_SANITIZE_ALL
     #       +CONFIG_DEBUG_INFO+CONFIG_GDB_SCRIPTS+CONFIG_ROCKETPORT+CONFIG_HID_SENSOR_HUMIDITY+CONFIG_REGULATOR_LP873X+CONFIG_ACPI_CMPC
     #       +CONFIG_MODULES+CONFIG_STRICT_MODULE_RWX+CONFIG_RANDOMIZE_BASE+CONFIG_X86_NEED_RELOCS+CONFIG_SCSI_CXGB3_ISCSI+CONFIG_RTLWIFI
     #       , data=training,
@@ -187,43 +184,43 @@ predComputation <- function(iris) {
   print(plot_multi_way_importance(rtree, size_measure = "no_of_nodes"))
   # print(plot_min_depth_interactions(rtree))
   # print (rownames(imp)[order(imp$Overall, decreasing=TRUE)])
-  
+
   # cp <- as_tibble(rtree$cptable) %>%
   #   filter(xerror <= min(xerror) + xstd) %>%
   #   filter(xerror == max(xerror)) %>%
   #   select(CP) %>%
   #   unlist()
-  # 
+  #
   # rtree <- prune(rtree, cp = cp)
   # rpart.plot(rtree)
   # plotFtImportance(rtree)
   # print(rtree)
   #print(varImp(rtree))
   #print(varImp(rtree))
-  
-  
+
+
   # print(rtree$variable.importance)
-  
+
   # plot(imp, top=20)
-  
- 
+
+
   #print(sort(varImp(rtree), decreasing = TRUE))
   # what are the important variables (via permutation)
-  
-  
+
+
   #predict the outcome of the testing data
   predicted <- predict(rtree, newdata=testing)
-  #predicted <- predict(model, data=testing) # for CART 
+  #predicted <- predict(model, data=testing) # for CART
 
   # what is the proportion variation explained in the outcome of the testing data?
   # i.e., what is 1-(SSerror/SStotal)
-  actual <- testing$KERNEL_SIZE 
+  actual <- testing$KERNEL_SIZE
   rsq <- 1-sum((actual-predicted)^2)/sum((actual-mean(actual))^2)
   #rsq <- sum((actual-predicted)^2)/sum((actual-mean(actual))^2)
   list(act=actual,prd=predicted,rs=rsq)
 }
 
 predKernelSizes <- predComputation(res)
-predKernelSizes$d <- abs((predKernelSizes$act - predKernelSizes$prd) / predKernelSizes$act) 
+predKernelSizes$d <- abs((predKernelSizes$act - predKernelSizes$prd) / predKernelSizes$act)
 mae <- ((100 / length(predKernelSizes$d)) * sum(predKernelSizes$d))
 print(paste("MAE", mae))
