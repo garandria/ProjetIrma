@@ -100,8 +100,14 @@ def printProgress(p):
 
 ## Generates CSV file
 # @param output output CSV file
-def genCSV(output):
+# @param cid The cid where is the .config file ( -1 for all )
+def genCSV(output, cid):
     first = True
+
+    where = "WHERE cid = " + str(cid)
+
+    if cid == -1:
+        where = "WHERE compilation_time > -1 ORDER BY cid LIMIT %s OFFSET %s"
 
     # CSV output file
     csvfile = open(output, 'w')
@@ -117,10 +123,11 @@ def genCSV(output):
             # Batches of requests
             offset = 0
             step = 50
+
             # Requests
             get_prop = "SELECT name, type FROM Properties"
-            query = "SELECT cid, config_file, core_size, compilation_time FROM {} WHERE cid >= 70717 AND compilation_time > -1 ORDER BY cid LIMIT %s OFFSET %s".format(creds["table"])
-            count_rows = "SELECT COUNT(*) FROM {} WHERE cid >= 70717 AND compilation_time > -1".format(creds["table"])
+            query = ("SELECT cid, config_file, core_size, compilation_time FROM {} " + where).format(creds["table"])
+            count_rows = ("SELECT COUNT(*) FROM {} " + where).format(creds["table"])
             # End condition
             end = False;
 
@@ -149,7 +156,6 @@ def genCSV(output):
             # Get row count
             cursor.execute(count_rows)
             row_count = cursor.fetchone()[0]
-            print("row_count:",row_count, flush=True)
             # Write header
             if first:
                 writer.writerow(names)
@@ -160,7 +166,12 @@ def genCSV(output):
             while not end:
                 printProgress(100*offset/row_count)
                 # Get results
-                cursor.execute(query, (step, offset))
+                if cid == -1:
+                    cursor.execute(query, (step, offset))
+                else:
+                    cursor.execute(query)
+                    end=True
+
                 results = cursor.fetchall()
                 # Check if end
                 if len(results) == 0:
@@ -172,6 +183,7 @@ def genCSV(output):
                     try:
                         # Parse .config
                         props = scanConfig(config_file, creds["bz2"])
+                        #print("\nprops:",props, flush=True)
                         # Load default values
                         values = list(defaults)
                         # Add values of features not in .config
@@ -185,6 +197,13 @@ def genCSV(output):
                     except ValueError as e:
                         # Bad .config
                         pass
+
+                if not cid == -1:
+                    cursor.close()
+                    printProgress(100)
+                    first = False
+                    print("")
+                    return values
 
                 offset += step
 
@@ -208,4 +227,4 @@ if __name__ == "__main__":
             print("No output file specified")
             exit(-1)
 
-    genCSV(sys.argv[1])
+    genCSV(sys.argv[1], 70723)
