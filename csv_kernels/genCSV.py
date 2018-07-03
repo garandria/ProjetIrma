@@ -126,7 +126,7 @@ def genCSV(output, cid):
 
             # Requests
             get_prop = "SELECT name, type FROM Properties"
-            query = ("SELECT cid, config_file, core_size, compilation_time FROM {} " + where).format(creds["table"])
+            query = ("SELECT cid, config_file FROM {} " + where).format(creds["table"])
             count_rows = ("SELECT COUNT(*) FROM {} " + where).format(creds["table"])
             # End condition
             end = False;
@@ -138,8 +138,6 @@ def genCSV(output, cid):
                 print("\nError : Properties not present in database - You need to run Kanalyser first (https://github.com/TuxML/Kanalyser)")
                 continue
 
-            types_results.append(("KERNEL_SIZE", "INT"))
-            types_results.append(("COMPILE_TIME", "FLOAT"))
             # Order properties and populate default values
             names = [""]*len(types_results)
             defaults = [0]*len(types_results)
@@ -176,7 +174,7 @@ def genCSV(output, cid):
                     break
 
                 # Enumerate results
-                for num, (cid, config_file, core_size, compilation_time) in enumerate(results):
+                for num, (cid, config_file) in enumerate(results):
                     try:
                         # Parse .config
                         props = scanConfig(config_file, creds["bz2"])
