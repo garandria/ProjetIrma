@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 ## @file genCSVlib.py
 # @author Pierre Le Luron, Alexis LE MASLE
 # @copyright Apache License 2.0
@@ -9,7 +9,7 @@ import MySQLdb
 import csv
 import bz2
 import sys
-import DBCredentials
+from . import DBCredentials
 
 default_values = {
     "UNKNOWN":"0",
@@ -227,4 +227,4 @@ if __name__ == "__main__":
             print("No output file specified")
             exit(-1)
 
-    genCSV(sys.argv[1], 70723)
+    genCSV(sys.argv[1], -1)
