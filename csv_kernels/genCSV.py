@@ -150,9 +150,6 @@ def genCSV(output, cid):
                 names[index] = name
                 defaults[index] = default_values[typ]
                 index += 1
-            # Add features not in .config
-            order_kernel_size = order["KERNEL_SIZE"]
-            order_compile_time = order["COMPILE_TIME"]
             # Get row count
             cursor.execute(count_rows)
             row_count = cursor.fetchone()[0]
@@ -186,9 +183,6 @@ def genCSV(output, cid):
                         #print("\nprops:",props, flush=True)
                         # Load default values
                         values = list(defaults)
-                        # Add values of features not in .config
-                        values[order_kernel_size] = core_size
-                        values[order_compile_time] = compilation_time
                         # Overwrite default values
                         for (k,v) in props.items():
                             values[order[k]] = v
