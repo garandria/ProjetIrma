@@ -9,7 +9,8 @@ import MySQLdb
 import csv
 import bz2
 import sys
-from . import DBCredentials
+import DBCredentials
+import argparse
 
 default_values = {
     "UNKNOWN":"0",
@@ -101,16 +102,21 @@ def printProgress(p):
 ## Generates CSV file
 # @param output output CSV file
 # @param cid The cid where is the .config file ( -1 for all )
-def genCSV(output, cid):
+def genCSV(output, cid, From:int=None, To:int=None):
     first = True
 
     where = "WHERE cid = " + str(cid)
+
+    if type(From) is int and type(To) is int:
+        print("Border used", flush=True)
+        cid = 0
+        where = "WHERE cid >= " + str(From) + " AND cid < " + str(To)
 
     if cid == -1:
         where = "WHERE compilation_time > -1 ORDER BY cid LIMIT %s OFFSET %s"
 
     # CSV output file
-    csvfile = open(output, 'w')
+    csvfile = open(output, 'a')
     writer = csv.writer(csvfile)
 
     for creds in DBCredentials.db:
@@ -150,7 +156,11 @@ def genCSV(output, cid):
                 index += 1
             # Get row count
             cursor.execute(count_rows)
-            row_count = cursor.fetchone()[0]
+            tmp = cursor.fetchone()
+            row_count = tmp[0]
+            if row_count == 0:
+                print("\nError, number of lines is 0", file=sys.stderr)
+                exit(0)
             # Write header
             if first:
                 writer.writerow(names)
@@ -209,14 +219,23 @@ def genCSV(output, cid):
             print("\nError : Can't read from db : {}".format(err.args[1]))
             continue
         finally:
+            csvfile.close()
             conn.close()
 
     print("CSV file generated at " + output)
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-            print("No output file specified")
-            exit(-1)
 
-    genCSV(sys.argv[1], -1)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("output",type=str, help="The output of the csv file (/dev/null can be used to test)")
+    parser.add_argument("cid",type=int, help="The cid from database to fetch")
+    parser.add_argument("From",type=int, help="From the cid ( to use with \"To\")", nargs="?", default=None)
+    parser.add_argument("To",type=int, help="To the cid ( to use with \"From\")", nargs="?", default=None)
+    args = parser.parse_args()
+
+    if bool(args.To) != bool(args.From):
+        print("To and From must been used together")
+        exit(0)
+
+    genCSV(args.output, args.cid, args.From, args.To)
