@@ -6,9 +6,9 @@
 # @details Functions necessary for CSV generation from a TuxML database to feed the ML on
 
 import MySQLdb
-import csv
 import bz2
 import sys
+from sys import exit
 import DBCredentials
 import argparse
 
@@ -100,22 +100,29 @@ def printProgress(p):
     print("] " + str(int(p)) + "%", end="", flush=True)
 
 ## Generates CSV file
-# @param output output CSV file
 # @param cid The cid where is the .config file ( -1 for all )
-def genCSV(output, cid, From:int=None, To:int=None):
+def genCSV(cid, From:int=None, To:int=None):
 
     where = "WHERE cid = " + str(cid)
 
-    if type(From) is int and type(To) is int:
-        cid = 0
-        where = "WHERE cid >= " + str(From) + " AND cid < " + str(To)
+    if (type(From) is int) and (type(To) is int):
+
+        if From > To:
+            From, To = To, From
+
+        if To == From+1:
+            cid = From
+            where = "WHERE cid = " + str(cid)
+        elif not From == To:
+            cid = 0
+            where = "WHERE cid >= " + str(From) + " AND cid < " + str(To)
+        else:
+            cid = From
+            where = "WHERE cid = " + str(cid)
+            print("You choose a range from", From, "to", str(To) + ".", "That is to say: cid =", cid, flush=True)
 
     if cid == -1:
         where = "WHERE compilation_time > -1 ORDER BY cid LIMIT %s OFFSET %s"
-
-    # CSV output file
-    csvfile = open(output, 'a')
-    writer = csv.writer(csvfile)
 
     for creds in DBCredentials.db:
         try:
@@ -156,8 +163,10 @@ def genCSV(output, cid, From:int=None, To:int=None):
             cursor.execute(count_rows)
             tmp = cursor.fetchone()
             row_count = tmp[0]
+
             if row_count == 0:
-                print("\nError, number of lines is 0", file=sys.stderr)
+                print("\nError, number of lines is 0", file=sys.stderr,flush=True)
+                cursor.close()
                 exit(0)
 
             print("Done\nFilling rows :")
@@ -178,27 +187,27 @@ def genCSV(output, cid, From:int=None, To:int=None):
                     end = True
                     break
 
+                val_list = {}
                 # Enumerate results
-                for num, (cid, config_file) in enumerate(results):
+                for num, (ci, config_file) in enumerate(results):
                     try:
                         # Parse .config
                         props = scanConfig(config_file, creds["bz2"])
-                        #print("\nprops:",props, flush=True)
                         # Load default values
                         values = list(defaults)
                         # Overwrite default values
                         for (k,v) in props.items():
                             values[order[k]] = v
-                        # Write to CSV
-                        writer.writerow(values);
+
+                        val_list[num] = values
                     except ValueError as e:
                         # Bad .config
                         pass
 
-                if not cid == -1:
+                # end
+                if not cid == -1 and not cid == 0:
                     cursor.close()
                     printProgress(100)
-                    print("")
                     return values
 
                 offset += step
@@ -206,22 +215,17 @@ def genCSV(output, cid, From:int=None, To:int=None):
             # Its over
             cursor.close()
             printProgress(100)
-            print("")
+            return val_list
 
         except MySQLdb.Error as err:
             print("\nError : Can't read from db : {}".format(err.args[1]))
             continue
         finally:
-            csvfile.close()
             conn.close()
-
-    print("CSV file generated at " + output)
-
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("output",type=str, help="The output of the csv file (/dev/null can be used to test)")
     parser.add_argument("cid",type=int, help="The cid from database to fetch")
     parser.add_argument("From",type=int, help="From the cid ( to use with \"To\")", nargs="?", default=None)
     parser.add_argument("To",type=int, help="To the cid ( to use with \"From\")", nargs="?", default=None)
@@ -231,4 +235,4 @@ if __name__ == "__main__":
         print("To and From must been used together")
         exit(0)
 
-    genCSV(args.output, args.cid, args.From, args.To)
+    genCSV(args.cid, args.From, args.To)
