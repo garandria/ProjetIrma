@@ -103,7 +103,6 @@ def printProgress(p):
 # @param output output CSV file
 # @param cid The cid where is the .config file ( -1 for all )
 def genCSV(output, cid, From:int=None, To:int=None):
-    first = True
 
     where = "WHERE cid = " + str(cid)
 
@@ -144,13 +143,13 @@ def genCSV(output, cid, From:int=None, To:int=None):
                 continue
 
             # Order properties and populate default values
-            names = [""]*len(types_results)
+            # names = [""]*len(types_results)
             defaults = [0]*len(types_results)
             order = {}
             index = 0
             for (name, typ) in types_results:
                 order[name] = index
-                names[index] = name
+                # names[index] = name
                 defaults[index] = default_values[typ]
                 index += 1
             # Get row count
@@ -160,9 +159,6 @@ def genCSV(output, cid, From:int=None, To:int=None):
             if row_count == 0:
                 print("\nError, number of lines is 0", file=sys.stderr)
                 exit(0)
-            # Write header
-            if first:
-                writer.writerow(names)
 
             print("Done\nFilling rows :")
 
@@ -202,7 +198,6 @@ def genCSV(output, cid, From:int=None, To:int=None):
                 if not cid == -1:
                     cursor.close()
                     printProgress(100)
-                    first = False
                     print("")
                     return values
 
@@ -211,7 +206,6 @@ def genCSV(output, cid, From:int=None, To:int=None):
             # Its over
             cursor.close()
             printProgress(100)
-            first = False
             print("")
 
         except MySQLdb.Error as err:
