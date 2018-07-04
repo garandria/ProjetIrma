@@ -108,7 +108,6 @@ def genCSV(output, cid, From:int=None, To:int=None):
     where = "WHERE cid = " + str(cid)
 
     if type(From) is int and type(To) is int:
-        print("Border used", flush=True)
         cid = 0
         where = "WHERE cid >= " + str(From) + " AND cid < " + str(To)
 
