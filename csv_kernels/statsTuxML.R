@@ -18,7 +18,16 @@ res <- read.csv("/Users/macher1/Documents/RESEARCH/INPROGRESS/tuxml-stat/config_
 res$vmlinux <- res$vmlinux / 1048576
 res$date <- NULL
 
+nbCompilationFailures = nrow(res %>% filter(vmlinux <= 0))
+print(paste("compilation failures:", nbCompilationFailures))
+print(paste("percentage of failures:", (nbCompilationFailures / nrow(res)) * 100))
+# TODO: (for focusing on kernels that do compile)
+res <- res %>% filter(vmlinux > 0)
+
+# TODO: it's really for exploring 
+print("*** the following stats/numbers are based on DEBUG_INFO = 'n' *****")
 res <- res %>% filter(DEBUG_INFO == "n")
+
 
 # res <- subset(res, KERNEL_SIZE != 0)
 # res <- res[20:nrow(res),]
@@ -82,8 +91,8 @@ bp
 
 
 
-
-N_TRAINING = 700
+PERCENTAGE_TRAINING = 70 # percent 
+N_TRAINING = round ((nrow(res) * 70) / 100)
 
 # splitdf function will return a list of training and testing sets
 splitdf <- function(dataframe, seed=NULL) {
@@ -98,14 +107,11 @@ splitdf <- function(dataframe, seed=NULL) {
 
 NTREE = 100
 
+
+### unofrtuantely the following two procedures take a while (up to the point they cannot be used as such)
 mkRandomForest <- function(dat) {
   # mtry <- (ncol(dat) - 7) # 7: because we excluse non predictor variables! => BAGGING (m=p)
-  return (randomForest (vmlinux~CONFIG_SFC_FALCON+CONFIG_SENSORS_LTC4245+CONFIG_DEBUG_INFO_REDUCED+CONFIG_KEYBOARD_DLINK_DIR685+CONFIG_DEBUG_INFO_SPLIT+CONFIG_SENSORS_TMP103
-                        +CONFIG_SND_OSSEMUL+CONFIG_SOUND_OSS_CORE+                                    
-                          CONFIG_SCSI_FUTURE_DOMAIN+CONFIG_NET_VENDOR_NVIDIA+CONFIG_MEGARAID_LEGACY+CONFIG_UBSAN_SANITIZE_ALL                                 
-                        +CONFIG_DEBUG_INFO+CONFIG_GDB_SCRIPTS+CONFIG_ROCKETPORT+CONFIG_HID_SENSOR_HUMIDITY+CONFIG_REGULATOR_LP873X+CONFIG_ACPI_CMPC
-                        +CONFIG_MODULES+CONFIG_STRICT_MODULE_RWX+CONFIG_RANDOMIZE_BASE+CONFIG_X86_NEED_RELOCS+CONFIG_SCSI_CXGB3_ISCSI+CONFIG_RTLWIFI
-                        , data=dat,importance=TRUE,ntree=NTREE,keep.forest=TRUE,na.action=na.exclude))
+  return (randomForest (vmlinux~.-time-BZIP2-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-BZIP2.vmlinux-XZ-LZMA.vmlinux-XZ.vmlinux, data=dat,importance=TRUE,ntree=NTREE,keep.forest=TRUE,na.action=na.exclude))
 }
 
 mkBoosting <- function(dat) {
