@@ -10,7 +10,7 @@ library(randomForestExplainer)
 library(Metrics)
 
 # TODO we assume that a res.csv exists (typically a CSV extracted from the database)
-res <- read.csv("/Users/macher1/Documents/RESEARCH/INPROGRESS/tuxml-stat/config_bdd.csv")
+res <- read.csv("/Users/macher1/Documents/RESEARCH/INPROGRESS/tuxml-irma/ProjetIrma/csv_kernels/config_bdd.csv")
 #"/Users/macher1/Downloads/tuxmlData20April18.csv") # set7.csv")  # read.csv("/Users/macher1/Documents/SANDBOX/csvTuxml/ProjetIrma/csvgen/res3.csv") 
 #res <- res[-c(21, 22), ] # HACK: we should actually delete this entry in the databse
 
