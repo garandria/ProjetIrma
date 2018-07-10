@@ -92,8 +92,8 @@ bp
 
 
 
-PERCENTAGE_TRAINING = 90 # percent 
-N_TRAINING = round ((nrow(res) * 70) / 100)
+PERCENTAGE_TRAINING = 70 # percent 
+N_TRAINING = round ((nrow(res) * PERCENTAGE_TRAINING) / 100)
 
 # splitdf function will return a list of training and testing sets
 splitdf <- function(dataframe, seed=NULL) {
@@ -164,7 +164,7 @@ predComputation <- function(iris) {
     #       +CONFIG_MODULES+CONFIG_STRICT_MODULE_RWX+CONFIG_RANDOMIZE_BASE+CONFIG_X86_NEED_RELOCS+CONFIG_SCSI_CXGB3_ISCSI+CONFIG_RTLWIFI
     #     
     # KERNEL_SIZE~.-COMPILE_TIME
-     rpart(BZIP2.vmlinux~.-time-vmlinux-BZIP2-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data=training,
+     rpart(vmlinux~.-time-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data=training,
        method = "anova",
        parms = list(split = "information"),
         control = rpart.control(minsplit = 2,
