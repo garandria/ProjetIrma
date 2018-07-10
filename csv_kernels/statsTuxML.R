@@ -17,6 +17,7 @@ res <- read.csv("/Users/macher1/Documents/RESEARCH/INPROGRESS/tuxml-irma/ProjetI
 # preprocessing
 res$vmlinux <- res$vmlinux / 1048576
 res$date <- NULL
+res$cid <- NULL
 
 nbCompilationFailures = nrow(res %>% filter(vmlinux <= 0))
 print(paste("compilation failures:", nbCompilationFailures))
@@ -25,8 +26,8 @@ print(paste("percentage of failures:", (nbCompilationFailures / nrow(res)) * 100
 res <- res %>% filter(vmlinux > 0)
 
 # TODO: it's really for exploring 
-print("*** the following stats/numbers are based on DEBUG_INFO = 'n' *****")
-res <- res %>% filter(DEBUG_INFO == "n")
+#print("*** the following stats/numbers are based on DEBUG_INFO = 'n' *****")
+#res <- res %>% filter(DEBUG_INFO == "n")
 
 
 # res <- subset(res, KERNEL_SIZE != 0)
@@ -91,7 +92,7 @@ bp
 
 
 
-PERCENTAGE_TRAINING = 70 # percent 
+PERCENTAGE_TRAINING = 90 # percent 
 N_TRAINING = round ((nrow(res) * 70) / 100)
 
 # splitdf function will return a list of training and testing sets
@@ -163,7 +164,7 @@ predComputation <- function(iris) {
     #       +CONFIG_MODULES+CONFIG_STRICT_MODULE_RWX+CONFIG_RANDOMIZE_BASE+CONFIG_X86_NEED_RELOCS+CONFIG_SCSI_CXGB3_ISCSI+CONFIG_RTLWIFI
     #     
     # KERNEL_SIZE~.-COMPILE_TIME
-     rpart(vmlinux~.-time-BZIP2-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-BZIP2.vmlinux-XZ-LZMA.vmlinux-XZ.vmlinux, data=training,
+     rpart(BZIP2.vmlinux~.-time-vmlinux-BZIP2-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data=training,
        method = "anova",
        parms = list(split = "information"),
         control = rpart.control(minsplit = 2,
