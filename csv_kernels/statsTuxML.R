@@ -19,6 +19,8 @@ res$vmlinux <- res$vmlinux / 1048576
 res$date <- NULL
 res$cid <- NULL
 
+
+
 nbCompilationFailures = nrow(res %>% filter(vmlinux <= 0))
 print(paste("compilation failures:", nbCompilationFailures))
 print(paste("percentage of failures:", (nbCompilationFailures / nrow(res)) * 100))
@@ -164,15 +166,15 @@ predComputation <- function(iris) {
     #       +CONFIG_MODULES+CONFIG_STRICT_MODULE_RWX+CONFIG_RANDOMIZE_BASE+CONFIG_X86_NEED_RELOCS+CONFIG_SCSI_CXGB3_ISCSI+CONFIG_RTLWIFI
     #     
     # KERNEL_SIZE~.-COMPILE_TIME
-    rpart(vmlinux~.-time-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data=training)
+    rpart(vmlinux~.-time-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data=training,
      #  method = "anova",
-     # parms = list(split = "information"),
-     #   control = rpart.control(minsplit = 2,
-     #                            minbucket = 8,
+     parms = list(split = "information"),
+        control = rpart.control(minsplit = 2,
+                                 minbucket = 8,
        #                         #maxdepth = maxDepth,
-       #                         #cp = complexity,
-     #                           usesurrogate = 0,
-    #                            maxsurrogate = 0)
+                                #cp = complexity,
+                                usesurrogate = 0,
+                                maxsurrogate = 0))
     
     
 
@@ -221,8 +223,32 @@ predComputation <- function(iris) {
   list(act=actual,prd=predicted,rs=rsq)
 }
 
-predKernelSizes <- predComputation(res)
-predKernelSizes$d <- abs((predKernelSizes$act - predKernelSizes$prd) / predKernelSizes$act)
-mae <- mae(predKernelSizes$act, predKernelSizes$prd)
+#predKernelSizes <- predComputation(res)
+#predKernelSizes$d <- abs((predKernelSizes$act - predKernelSizes$prd) / predKernelSizes$act)
+#mae <- mae(predKernelSizes$act, predKernelSizes$prd)
 # mae <- ((100 / length(predKernelSizes$d)) * sum(predKernelSizes$d))
+#print(paste("MAE", mae))
+
+
+
+linearReg <- function(iris) {
+  
+  #apply the function
+  splits <- splitdf(iris)
+  
+  # save the training and testing sets as data frames
+  training <- splits$trainset
+  testing <- splits$testset
+  
+  lnModel <- lm(formula=vmlinux~.-time-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data = training)
+  
+  predicted <- predict(lnModel, newdata=testing)
+  actual <- testing$vmlinux
+ 
+  list(act=actual,prd=predicted)
+  
+}
+
+predKernelSizes <- linearReg(res)
+mae <- mae(predKernelSizes$act, predKernelSizes$prd)
 print(paste("MAE", mae))
