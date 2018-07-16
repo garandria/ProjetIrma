@@ -226,13 +226,12 @@ def genCSV(cid, From: int=None, To: int=None, incremental=True):
                         # Bad .config
                         pass
 
-                # for entry in val_list:
-                #     print("CC_OPTIMIZE_FOR_SIZE:", val_list[entry][7568])
-
                 # end
                 if not cid == -1 and cid == 0:
                     cursor.close()
                     printProgress(100)
+                    assert type(
+                        val_list) is dict, "val_list is not a dict type"
                     return val_list
 
                 offset += step
@@ -240,6 +239,8 @@ def genCSV(cid, From: int=None, To: int=None, incremental=True):
             # Its over
             cursor.close()
             printProgress(100)
+            assert type(
+                val_list) is dict, "val_list is not a dict type"
             return val_list
 
         except MySQLdb.Error as err:
