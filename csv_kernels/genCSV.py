@@ -13,26 +13,30 @@ import DBCredentials
 import argparse
 
 default_values = {
-    "UNKNOWN":"0",
-    "INT":"0",
-    "HEX":"0x0",
-    "STRING":None,
-    "TRISTATE":"n",
-    "BOOL":"n",
-    "FLOAT":"0.0"
+    "UNKNOWN": "0",
+    "INT": "0",
+    "HEX": "0x0",
+    "STRING": None,
+    "TRISTATE": "n",
+    "BOOL": "n",
+    "FLOAT": "0.0"
 }
 
 ## Check if a character is a whitespace for .config parsing
 # @param c character to check
 # @returns boolean indicating if c is whitespace
+
+
 def isWhitespace(c):
-    return c==' ' or c=='\t' or c=='\n'
+    return c == ' ' or c == '\t' or c == '\n'
 
 ## Extracts .config data and populates a dict (property name without prefix "CONFIG_" as key)
 # @param configdata .config data (raw or bzipped)
 # @param bz2_enabled indicates whether the data is encoded with bz2
 # @returns output dict
 # @throws ValueError if the .config is malformed
+
+
 def scanConfig(configdata, bz2_enabled):
     # Decode
     if bz2_enabled:
@@ -78,32 +82,45 @@ def scanConfig(configdata, bz2_enabled):
             else:
                 # Validate name + value
                 # Remove quotes
-                if value[0] == '"' and value[-1] == '"': value = value[1:-1]
+                if value[0] == '"' and value[-1] == '"':
+                    value = value[1:-1]
                 # Set in dict and remove leading "CONFIG_" in name
                 props[name[7:]] = value
                 state = 0
         cursor += 1
-    if state == 2: raise ValueError("Incomplete .config file : " + str(props))
+    if state == 2:
+        raise ValueError("Incomplete .config file : " + str(props))
     return props
 
 ## Pretty progress bar
 # @param p progress in percents
+
+
 def printProgress(p):
-    if p > 100: p = 100
-    if p < 0: p = 0
+    if p > 100:
+        p = 100
+    if p < 0:
+        p = 0
+    end = ""
+    if p == 100:
+        end = "\n"
     progress = p/5
     print("\rProgression: [", end="", flush=True)
     for i in range(int(progress)):
         print("#", end="", flush=True)
     for i in range(int(progress), 20):
         print("-", end="", flush=True)
-    print("] " + str(int(p)) + "%", end="", flush=True)
+    print("] " + str(int(p)) + "%", end=end, flush=True)
 
 ## Generates CSV file
 # @param cid The cid where is the .config file ( -1 for all )
-def genCSV(cid, From:int=None, To:int=None):
 
-    where = "WHERE cid = " + str(cid)
+
+def genCSV(cid, From: int=None, To: int=None, incremental=True):
+
+    inc = " AND incremental_mod = 0" if incremental == False else ""
+
+    where = "WHERE cid = " + str(cid) + inc
 
     if (type(From) is int) and (type(To) is int):
 
@@ -112,22 +129,24 @@ def genCSV(cid, From:int=None, To:int=None):
 
         if To == From+1:
             cid = From
-            where = "WHERE cid = " + str(cid)
+            where = "WHERE cid = " + str(cid) + inc
         elif not From == To:
             cid = 0
-            where = "WHERE cid >= " + str(From) + " AND cid < " + str(To)
+            where = "WHERE cid >= " + str(From) + " AND cid < " + str(To) + inc
         else:
             cid = From
-            where = "WHERE cid = " + str(cid)
-            print("You choose a range from", From, "to", str(To) + ".", "That is to say: cid =", cid, flush=True)
+            where = "WHERE cid = " + str(cid) + inc
+            print("You choose a range from", From, "to", str(To) +
+                  ".", "That is to say: cid =", cid, flush=True)
 
     if cid == -1:
-        where = "WHERE compilation_time > -1 ORDER BY cid LIMIT %s OFFSET %s"
+        where = "WHERE compilation_time > -1 ORDER BY cid LIMIT %s OFFSET %s" + inc
 
     for creds in DBCredentials.db:
         try:
             # Connect to DB
-            print("Connecting to db {} at {}...".format(creds["creds"]["db"], creds["creds"]["host"]), end="", flush=True)
+            print("Connecting to db {} at {}...".format(
+                creds["creds"]["db"], creds["creds"]["host"]), end="", flush=True)
             conn = MySQLdb.connect(**creds["creds"])
             cursor = conn.cursor()
 
@@ -137,10 +156,12 @@ def genCSV(cid, From:int=None, To:int=None):
 
             # Requests
             get_prop = "SELECT name, type FROM Properties"
-            query = ("SELECT cid, config_file FROM {} " + where).format(creds["table"])
-            count_rows = ("SELECT COUNT(*) FROM {} " + where).format(creds["table"])
+            query = ("SELECT cid, config_file FROM {} " +
+                     where).format(creds["table"])
+            count_rows = ("SELECT COUNT(*) FROM {} " +
+                          where).format(creds["table"])
             # End condition
-            end = False;
+            end = False
 
             # Extract properties
             cursor.execute(get_prop)
@@ -165,7 +186,8 @@ def genCSV(cid, From:int=None, To:int=None):
             row_count = tmp[0]
 
             if row_count == 0:
-                print("\nError, number of lines is 0", file=sys.stderr,flush=True)
+                print("\nError, number of lines is 0",
+                      file=sys.stderr, flush=True)
                 cursor.close()
                 exit(0)
 
@@ -179,7 +201,7 @@ def genCSV(cid, From:int=None, To:int=None):
                     cursor.execute(query, (step, offset))
                 else:
                     cursor.execute(query)
-                    end=True
+                    end = True
 
                 results = cursor.fetchall()
                 # Check if end
@@ -196,7 +218,7 @@ def genCSV(cid, From:int=None, To:int=None):
                         # Load default values
                         values = list(defaults)
                         # Overwrite default values
-                        for (k,v) in props.items():
+                        for (k, v) in props.items():
                             values[order[k]] = v
 
                         val_list[num] = values
@@ -204,11 +226,14 @@ def genCSV(cid, From:int=None, To:int=None):
                         # Bad .config
                         pass
 
+                # for entry in val_list:
+                #     print("CC_OPTIMIZE_FOR_SIZE:", val_list[entry][7568])
+
                 # end
-                if not cid == -1 and not cid == 0:
+                if not cid == -1 and cid == 0:
                     cursor.close()
                     printProgress(100)
-                    return values
+                    return val_list
 
                 offset += step
 
@@ -223,12 +248,15 @@ def genCSV(cid, From:int=None, To:int=None):
         finally:
             conn.close()
 
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("cid",type=int, help="The cid from database to fetch")
-    parser.add_argument("From",type=int, help="From the cid ( to use with \"To\")", nargs="?", default=None)
-    parser.add_argument("To",type=int, help="To the cid ( to use with \"From\")", nargs="?", default=None)
+    parser.add_argument("cid", type=int, help="The cid from database to fetch")
+    parser.add_argument(
+        "From", type=int, help="From the cid ( to use with \"To\")", nargs="?", default=None)
+    parser.add_argument(
+        "To", type=int, help="To the cid ( to use with \"From\")", nargs="?", default=None)
     args = parser.parse_args()
 
     if bool(args.To) != bool(args.From):
