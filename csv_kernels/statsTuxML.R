@@ -205,7 +205,7 @@ predComputation <- function(iris) {
     #       +CONFIG_MODULES+CONFIG_STRICT_MODULE_RWX+CONFIG_RANDOMIZE_BASE+CONFIG_X86_NEED_RELOCS+CONFIG_SCSI_CXGB3_ISCSI+CONFIG_RTLWIFI
     #     
     # KERNEL_SIZE~.-COMPILE_TIME
-    rpart(vmlinux~.-time-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data=training,
+    rpart(vmlinux~.-time-compilation_success-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data=training,
      #  method = "anova",
      parms = list(split = "information"),
         control = rpart.control(minsplit = 2,
@@ -279,7 +279,7 @@ linearReg <- function(iris) {
   training <- splits$trainset
   testing <- splits$testset
   
-  lnModel <- lm(formula=vmlinux~.-time-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data = training)
+  lnModel <- lm(formula=vmlinux~.-time-compilation_success-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data = training)
   
   predicted <- predict(lnModel, newdata=testing)
   actual <- testing$vmlinux
