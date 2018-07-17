@@ -15,9 +15,48 @@ res <- read.csv("/Users/macher1/Documents/RESEARCH/INPROGRESS/tuxml-irma/ProjetI
 #res <- res[-c(21, 22), ] # HACK: we should actually delete this entry in the databse
 
 # preprocessing
+res$compilation_success <- res$vmlinux != -1
 res$vmlinux <- res$vmlinux / 1048576
 res$date <- NULL
 res$cid <- NULL
+
+
+
+predCompilationSuccess <- function(iris) {
+  
+  #apply the function
+  splits <- splitdf(iris)
+  
+  # save the training and testing sets as data frames
+  training <- splits$trainset
+  testing <- splits$testset
+  
+  rtree <-
+    rpart(compilation_success~.-vmlinux-time-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data=training,
+          #  method = "anova",
+          parms = list(split = "information"),
+          control = rpart.control(minsplit = 2,
+                                  minbucket = 8,
+                                  #                         #maxdepth = maxDepth,
+                                  #cp = complexity,
+                                  usesurrogate = 0,
+                                  maxsurrogate = 0))
+  
+  
+  # print(rtree)
+  rpart.plot(rtree)
+  plotFtImportance(rtree)
+  
+  predicted <- predict(rtree, newdata=testing)
+ 
+  actual <- testing$compilation_success
+  list(act=actual,prd=predicted)
+}
+
+predCompilationSuccess(res)
+
+
+
 
 
 
@@ -223,11 +262,11 @@ predComputation <- function(iris) {
   list(act=actual,prd=predicted,rs=rsq)
 }
 
-#predKernelSizes <- predComputation(res)
+predKernelSizes <- predComputation(res)
 #predKernelSizes$d <- abs((predKernelSizes$act - predKernelSizes$prd) / predKernelSizes$act)
-#mae <- mae(predKernelSizes$act, predKernelSizes$prd)
+mae <- mae(predKernelSizes$act, predKernelSizes$prd)
 # mae <- ((100 / length(predKernelSizes$d)) * sum(predKernelSizes$d))
-#print(paste("MAE", mae))
+print(paste("MAE", mae))
 
 
 
@@ -249,6 +288,6 @@ linearReg <- function(iris) {
   
 }
 
-predKernelSizes <- linearReg(res)
-mae <- mae(predKernelSizes$act, predKernelSizes$prd)
-print(paste("MAE", mae))
+#predKernelSizes <- linearReg(res)
+#mae <- mae(predKernelSizes$act, predKernelSizes$prd)
+#print(paste("MAE", mae))
