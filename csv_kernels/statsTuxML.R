@@ -56,10 +56,6 @@ predCompilationSuccess <- function(iris) {
 predCompilationSuccess(res)
 
 
-
-
-
-
 nbCompilationFailures = nrow(res %>% filter(vmlinux <= 0))
 print(paste("compilation failures:", nbCompilationFailures))
 print(paste("percentage of failures:", (nbCompilationFailures / nrow(res)) * 100))
@@ -67,8 +63,8 @@ print(paste("percentage of failures:", (nbCompilationFailures / nrow(res)) * 100
 res <- res %>% filter(vmlinux > 0)
 
 # TODO: it's really for exploring 
-#print("*** the following stats/numbers are based on DEBUG_INFO = 'n' *****")
-#res <- res %>% filter(DEBUG_INFO == "n")
+print("*** the following stats/numbers are based on DEBUG_INFO = 'n' *****")
+res <- res %>% filter(DEBUG_INFO == "n")
 
 
 # res <- subset(res, KERNEL_SIZE != 0)
