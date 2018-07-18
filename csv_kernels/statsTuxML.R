@@ -8,11 +8,13 @@ library(gbm)
 library(dplyr)
 library(randomForestExplainer)
 library(Metrics)
+library(data.table) # fread
 
-# TODO we assume that a res.csv exists (typically a CSV extracted from the database)
-res <- read.csv("/Users/macher1/Documents/RESEARCH/INPROGRESS/tuxml-irma/ProjetIrma/csv_kernels/config_bdd.csv")
-#"/Users/macher1/Downloads/tuxmlData20April18.csv") # set7.csv")  # read.csv("/Users/macher1/Documents/SANDBOX/csvTuxml/ProjetIrma/csvgen/res3.csv") 
-#res <- res[-c(21, 22), ] # HACK: we should actually delete this entry in the databse
+# we assume that a config_bdd.csv exists (typically a CSV extracted from the database)
+CSV_TUX_FILENAME='config_bdd.csv'
+
+# read.csv, read_csv or fread? that's the question (we'll have the answer with pcsv, a polymorphic DSL for CSV ;))
+res <- read.csv(CSV_TUX_FILENAME) #fread(CSV_TUX_FILENAME, check.names=TRUE) # read_csv(CSV_TUX_FILENAME)
 
 # preprocessing
 res$compilation_success <- res$vmlinux != -1
@@ -21,11 +23,49 @@ res$date <- NULL
 res$cid <- NULL
 
 
+####### UTILITY FUNCTIONS ##########
 
-predCompilationSuccess <- function(iris) {
+# splitdf function will return a list of training and testing sets
+splitdf <- function(dataframe, perc, seed=NULL) {
+  if (!is.null(seed)) set.seed(seed)
+  index <- 1:nrow(dataframe)
+  n_train = round ((nrow(dataframe) * perc) / 100)
+  trainindex <- sample(index, trunc(n_train))
+  trainset <- dataframe[trainindex, ]
+  testset <- dataframe[-trainindex, ]
+  list(trainset=trainset,testset=testset)
+}
+
+# plotting feature importances of a decision/RF tree
+plotFtImportance <- function(rtree, ftFileName) {
+  # pdf(paste(ftFileName, ".pdf", sep= ""))
+  impPlot <- rtree$variable.importance %>%
+    data_frame(variable = names(.), importance = .) %>%
+    mutate(importance = importance / sum(importance)) %>%
+    top_n(20) %>%
+    ggplot(aes(x = importance,
+               y = reorder(variable, importance))) +
+    geom_point() +
+    labs(title = "Importance of configuration options ",
+         subtitle = "(20 most relevant scaled to sum 1)") +
+    theme_bw() +
+    theme(axis.title.y = element_blank(),
+          plot.title = element_text(hjust = 0.5),
+          plot.subtitle = element_text(hjust = 0.5),
+          axis.line = element_line(colour = "grey"),
+          panel.grid.major = element_blank(), panel.border = element_blank()) +
+    geom_segment(aes(x = -Inf, y = reorder(variable, importance),
+                     xend = importance, yend = reorder(variable, importance)),
+                 size = 0.2)
+  #dev.off()
+  print(impPlot)
+}
+
+
+predCompilationSuccess <- function(iris, percTraining) {
   
   #apply the function
-  splits <- splitdf(iris)
+  splits <- splitdf(iris, percTraining)
   
   # save the training and testing sets as data frames
   training <- splits$trainset
@@ -45,7 +85,7 @@ predCompilationSuccess <- function(iris) {
   
   # print(rtree)
   rpart.plot(rtree)
-  plotFtImportance(rtree)
+  plotFtImportance(rtree, "compilationFtImportance")
   
   predicted <- predict(rtree, newdata=testing)
  
@@ -53,7 +93,7 @@ predCompilationSuccess <- function(iris) {
   list(act=actual,prd=predicted)
 }
 
-predCompilationSuccess(res)
+predCompilationSuccess(res, 70)
 
 
 nbCompilationFailures = nrow(res %>% filter(vmlinux <= 0))
@@ -63,8 +103,8 @@ print(paste("percentage of failures:", (nbCompilationFailures / nrow(res)) * 100
 res <- res %>% filter(vmlinux > 0)
 
 # TODO: it's really for exploring 
-print("*** the following stats/numbers are based on DEBUG_INFO = 'n' *****")
-res <- res %>% filter(DEBUG_INFO == "n")
+#print("*** the following stats/numbers are based on DEBUG_INFO = 'n' *****")
+#res <- res %>% filter(DEBUG_INFO == "n")
 
 
 # res <- subset(res, KERNEL_SIZE != 0)
@@ -129,24 +169,11 @@ bp
 
 
 
-PERCENTAGE_TRAINING = 70 # percent 
-N_TRAINING = round ((nrow(res) * PERCENTAGE_TRAINING) / 100)
-
-# splitdf function will return a list of training and testing sets
-splitdf <- function(dataframe, seed=NULL) {
-  if (!is.null(seed)) set.seed(seed)
-  index <- 1:nrow(dataframe)
-  #trainindex <- sample(index, trunc(length(index)/2))
-  trainindex <- sample(index, trunc(N_TRAINING))
-  trainset <- dataframe[trainindex, ]
-  testset <- dataframe[-trainindex, ]
-  list(trainset=trainset,testset=testset)
-}
 
 NTREE = 100
 
 
-### unofrtuantely the following two procedures take a while (up to the point they cannot be used as such)
+### unfortuantely the following two procedures take a while (up to the point they cannot be used as such)
 mkRandomForest <- function(dat) {
   # mtry <- (ncol(dat) - 7) # 7: because we excluse non predictor variables! => BAGGING (m=p)
   return (randomForest (vmlinux~.-time-BZIP2-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-BZIP2.vmlinux-XZ-LZMA.vmlinux-XZ.vmlinux, data=dat,importance=TRUE,ntree=NTREE,keep.forest=TRUE,na.action=na.exclude))
@@ -159,34 +186,10 @@ mkBoosting <- function(dat) {
   )
 }
 
-plotFtImportance <- function(rtree) {
-  
-  impPlot <- rtree$variable.importance %>%
-    data_frame(variable = names(.), importance = .) %>%
-    mutate(importance = importance / sum(importance)) %>%
-    top_n(20) %>%
-    ggplot(aes(x = importance,
-               y = reorder(variable, importance))) +
-    geom_point() +
-    labs(title = "Importance of configuration options ",
-         subtitle = "(20 most relevant scaled to sum 1)") +
-    theme_bw() +
-    theme(axis.title.y = element_blank(),
-          plot.title = element_text(hjust = 0.5),
-          plot.subtitle = element_text(hjust = 0.5),
-          axis.line = element_line(colour = "grey"),
-          panel.grid.major = element_blank(), panel.border = element_blank()) +
-    geom_segment(aes(x = -Inf, y = reorder(variable, importance),
-                     xend = importance, yend = reorder(variable, importance)),
-                 size = 0.2)
-  
-  print(impPlot)
-}
-
-predComputation <- function(iris) {
+predictRegression <- function(iris, percTraining) {
   
   #apply the function
-  splits <- splitdf(iris)
+  splits <- splitdf(iris, percTraining)
   
   # save the training and testing sets as data frames
   training <- splits$trainset
@@ -201,20 +204,20 @@ predComputation <- function(iris) {
     #       +CONFIG_MODULES+CONFIG_STRICT_MODULE_RWX+CONFIG_RANDOMIZE_BASE+CONFIG_X86_NEED_RELOCS+CONFIG_SCSI_CXGB3_ISCSI+CONFIG_RTLWIFI
     #     
     # KERNEL_SIZE~.-COMPILE_TIME
-    rpart(vmlinux~.-time-compilation_success-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data=training,
+    rpart(vmlinux~.-time-compilation_success-BZIP2-BZIP2.vmlinux-LZO.bzImage-XZ.bzImage-GZIP.bzImage-LZ4.bzImage-LZO.vmlinux-GZIP.vmlinux-LZ4.vmlinux-BZIP2.bzImage-LZO-LZMA.bzImage-LZ4-GZIP-LZMA-XZ-LZMA.vmlinux-XZ.vmlinux, data=training)
      #  method = "anova",
-     parms = list(split = "information"),
-        control = rpart.control(minsplit = 2,
-                                 minbucket = 8,
+     #parms = list(split = "information"),
+      #  control = rpart.control(minsplit = 2,
+       #                          minbucket = 8,
        #                         #maxdepth = maxDepth,
                                 #cp = complexity,
-                                usesurrogate = 0,
-                                maxsurrogate = 0))
+      #                          usesurrogate = 0,
+      #                          maxsurrogate = 0))
     
     
 
   rpart.plot(rtree)
-  # plotFtImportance(rtree)
+  plotFtImportance(rtree, "regressionFtImportance")
   # imp <- varImp(rtree)
   #varImpPlot(rtree)
   #plot(rtree)
@@ -258,18 +261,16 @@ predComputation <- function(iris) {
   list(act=actual,prd=predicted,rs=rsq)
 }
 
-predKernelSizes <- predComputation(res)
-#predKernelSizes$d <- abs((predKernelSizes$act - predKernelSizes$prd) / predKernelSizes$act)
+predKernelSizes <- predictRegression(res, 70)
 mae <- mae(predKernelSizes$act, predKernelSizes$prd)
-# mae <- ((100 / length(predKernelSizes$d)) * sum(predKernelSizes$d))
 print(paste("MAE", mae))
 
 
 
-linearReg <- function(iris) {
+linearReg <- function(iris, percTraining) {
   
   #apply the function
-  splits <- splitdf(iris)
+  splits <- splitdf(iris, percTraining)
   
   # save the training and testing sets as data frames
   training <- splits$trainset
@@ -284,6 +285,6 @@ linearReg <- function(iris) {
   
 }
 
-#predKernelSizes <- linearReg(res)
+#predKernelSizes <- linearReg(res, 70)
 #mae <- mae(predKernelSizes$act, predKernelSizes$prd)
 #print(paste("MAE", mae))
