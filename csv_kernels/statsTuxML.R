@@ -111,6 +111,8 @@ res <- res %>% filter(vmlinux > 0)
 print(paste("configuration options", ncol(res)))
 print(paste("number of configs", nrow(res))) 
 
+printBasicStatAboutOptions <- function (res) {
+
 myes <- apply(res, MARGIN = 1, FUN = function(x) length(x[x == "m"]))
 smyes <- summary(myes)
 print(paste("average number of m", smyes['Mean'])) 
@@ -157,6 +159,7 @@ print(paste("correlation between m options and kernel size ", cor(myes, ksize)))
 #labs = paste(res$CONFIG_UBSAN_SANITIZE_ALL, counts)  ## create labels
 #pie(counts, labels = labs)  ## plot
 
+}
 
 NTREE = 100
 
