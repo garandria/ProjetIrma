@@ -58,10 +58,12 @@ plotFtImportance <- function(rtree, ftFileName) {
                      xend = importance, yend = reorder(variable, importance)),
                  size = 0.2)
   #dev.off()
-  print(impPlot)
+  #print(impPlot)
 }
 
+#################
 
+# learning options that cause compilation failures
 predCompilationSuccess <- function(iris, percTraining) {
   
   #apply the function
@@ -93,7 +95,7 @@ predCompilationSuccess <- function(iris, percTraining) {
   list(act=actual,prd=predicted)
 }
 
-predCompilationSuccess(res, 70)
+# predCompilationSuccess(res, 70)
 
 
 nbCompilationFailures = nrow(res %>% filter(vmlinux <= 0))
@@ -105,10 +107,6 @@ res <- res %>% filter(vmlinux > 0)
 # TODO: it's really for exploring 
 #print("*** the following stats/numbers are based on DEBUG_INFO = 'n' *****")
 #res <- res %>% filter(DEBUG_INFO == "n")
-
-
-# res <- subset(res, KERNEL_SIZE != 0)
-# res <- res[20:nrow(res),]
 
 print(paste("configuration options", ncol(res)))
 print(paste("number of configs", nrow(res))) 
@@ -132,18 +130,10 @@ print(paste("min number of yes/m", min(nyesAndM)))
 print(paste("max number of yes/m", max(nyesAndM))) 
 
 
-
-# res$nbActiveOptions <- nyes
-
 comptime <- res$time
-
 ksize <- res$vmlinux
-#print("Kernel sizes in Mo")
-#print(ksize)
-
 print("Kernel size (in Mo)")
 print(summary(ksize))
-
 print("Compilation time")
 print(summary(comptime))
 
@@ -159,15 +149,13 @@ print(paste("correlation between m options and comp time ", cor(myes, comptime))
 print(paste("correlation between m options and kernel size ", cor(myes, ksize)))
 
 # Bar plot
-bp<- ggplot(res, aes(x=DEBUG_INFO, y=""))+
-  geom_bar(width = 1, stat = "identity")
-bp
+#bp<- ggplot(res, aes(x=DEBUG_INFO, y=""))+
+#  geom_bar(width = 1, stat = "identity")
+#bp
 
 #counts = table(res$CONFIG_UBSAN_SANITIZE_ALL)  ## get counts
 #labs = paste(res$CONFIG_UBSAN_SANITIZE_ALL, counts)  ## create labels
 #pie(counts, labels = labs)  ## plot
-
-
 
 
 NTREE = 100
@@ -266,7 +254,12 @@ mae <- mae(predKernelSizes$act, predKernelSizes$prd)
 print(paste("MAE", mae))
 
 
+predKernelSizesWithoutDebug <- predictRegression(res %>% filter(DEBUG_INFO == "n"), 70)
+maeWithoutDebug <- mae(predKernelSizesWithoutDebug$act, predKernelSizesWithoutDebug$prd)
+print(paste("MAE (without debug)", maeWithoutDebug))
 
+
+# basic linear regression
 linearReg <- function(iris, percTraining) {
   
   #apply the function
@@ -285,6 +278,7 @@ linearReg <- function(iris, percTraining) {
   
 }
 
+# does not scale 
 #predKernelSizes <- linearReg(res, 70)
 #mae <- mae(predKernelSizes$act, predKernelSizes$prd)
 #print(paste("MAE", mae))
