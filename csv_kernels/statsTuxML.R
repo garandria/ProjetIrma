@@ -2,13 +2,13 @@ library(ggplot2)
 library(readr)
 library(rpart)
 library(rpart.plot)
-library(randomForest)
-library(caret)
-library(gbm)
+#library(randomForest)
+#library(caret)
+#library(gbm)
 library(dplyr)
-library(randomForestExplainer)
+#library(randomForestExplainer)
 library(Metrics)
-library(data.table) # fread
+#library(data.table) # fread
 
 # we assume that a config_bdd.csv exists (typically a CSV extracted from the database)
 CSV_TUX_FILENAME='config_bdd.csv'
