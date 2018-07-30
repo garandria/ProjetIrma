@@ -11,6 +11,10 @@ Please contact us if you want some CSV files
 
 ## bdd2csv
 
+specific requirements: 
+ * pip3 install mysqlclient
+ * apt-get install python-dev libmysqlclient-dev
+ 
 This script extracts from the database a CSV file (columns are options and performance values such as size, time, etc.) 
 Warning: it is a time-consuming procedure
 
