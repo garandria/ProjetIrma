@@ -21,7 +21,8 @@ Warning: it is a time-consuming procedure
 ## Prerequisistes 
 Python 3
 Jupyter http://jupyter.org/ (recommendations: nbconvert) 
-pip3 install matplotlib pandas numpy scipy sklearn seaborn tpot 
+pip3 install matplotlib pandas numpy scipy sklearn seaborn tpot graphviz 
+apt install graphviz (for dot) 
 
 # For R 
 
