@@ -27,3 +27,13 @@ apt install graphviz (for dot)
 # For R 
 
 install.packages(pkg=c("ggplot2", "readr", "rpart", "rpart.plot", "randomForest", "caret", "gbm", "dplyr", "randomForestExplainer", "Metrics", "data.table"))  
+
+# IGRIDA specific 
+
+It requires (lot of) memory to execute Jupyter or R: 
+oarsub -I -l /nodes=1,walltime=2 -p "virt='YES' AND mem_node > 10*1024"
+
+Command line: 
+jupyter nbconvert --to markdown --ExecutePreprocessor.timeout=None --execute TUXML-basic.ipynb
+
+
