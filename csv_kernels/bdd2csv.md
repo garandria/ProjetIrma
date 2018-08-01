@@ -150,8 +150,8 @@ def to_csv(From, To):
 if __name__ == "__main__":
     
     # Change values to append a new range of data from db to the csv
-    From = 90000 # 40510 56580 # 
-    To = 92500 #88036 #80054 # 78900 # 56593 # 
+    From = 62000 # 40510 56580 # 
+    To = 92800 #88036 #80054 # 78900 # 56593 # 
     
     subprocess.run("rm config_bdd.csv", shell=True)
     
@@ -175,7 +175,7 @@ if __name__ == "__main__":
 ```
 
     config_bdd.csv created
-    From 90000 to 92500
+    From 62000 to 92800
     Connecting to db IrmaDB_prod at 148.60.11.195...Done
     Filling rows :
     Progression: [####################] 100%
