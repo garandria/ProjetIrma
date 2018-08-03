@@ -1,38 +1,33 @@
+#!/bin/bash
+#OAR -l /cpu=1/core=4,walltime=1:00:00
+#OAR -p virt='YES'
 
-# spring.sh is the "spring" from where comes all the ssh connexions to your IT infrastructure to run
-# a given number of compilation via MLfood.py
-# To run this script, you have to set up RSA keys on the machines you wish to use
+nb=0
 
-room=("e008" "e010" "d020" "d022" "d024" "d026" "d028" "d122")
-
-machine=("m01" "m02" "m03" "m04" "m05" "m06" "m07" "m08" "m09" "m10")
-
-cpt=0
-
-if [ $# -eq 0 ]
-  then
-    echo "Please precise a number of compilation to spread: ./compilIstic.sh [number]"
-    exit -1
+if [ -z "$1" ]; then
+	nb=1
+else
+	nb=$1
 fi
 
-re='^[0-9]+$'
-if ! [[ $1 =~ $re ]] ; then
-   echo "error: Not a number" >&2; exit 1
-fi
+#OAR --array-param-file ./params.txt
+#OAR -O /temp_dd/igrida-fs1/alemasle/oar_output/job.%jobid%.output
+#OAR -E /temp_dd/igrida-fs1/alemasle/oar_output/job.%jobid%.error
 
+. /etc/profile.d/modules.sh
 
-echo -n "login: "
-read login
+set -x
 
-# Machines de l'istic
-for elem in ${room[@]}
-do
-  echo "Room $elem -- START"
-  for m in ${machine[@]}
-  do
-    cpt=$((cpt + 1))
-    (ssh -o StrictHostKeyChecking=no -tt $login@$elem$m.istic.univ-rennes1.fr "nohup ~/ProjetIrma/MLfood.py $1 --force-compilation-limits --dev --no-logs --no-check-log > /dev/null; exit" > /dev/null;  echo $elem$m -- END)&
-  done
+module load veertuosa/0.0.1
+
+VM_NAME=TuxML_${OAR_JOBID}
+
+veertuosa_launch --name ${VM_NAME} --image /temp_dd/igrida-fs1/alemasle/images/TuxMLDebian.qcow2
+
+VM_CMD=""
+
+for i in $(seq $1); do
+	VM_CMD+="/TuxML/runandlog.py; "
 done
 
-echo "$login has spread $1 compilations on $cpt machines"
+ssh-vm $VM_NAME "$VM_CMD"
