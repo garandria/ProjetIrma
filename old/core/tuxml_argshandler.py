@@ -56,7 +56,7 @@ def args_handler():
     v_help += " " * 2 + "4 : very chatty\n"
     V_help = "display TuxML version and exit"
     d_help = "generate a new kconfig file with the KCONFIG_SEED or use\n"
-    d_help = "the KCONFIG_FILE given.\n"
+    d_help += "the KCONFIG_FILE given.\n"
     c_help = "define  the  number  of CPU  cores  to  use  during  the\n"
     c_help += "compilation. By default  TuxML  use all  the  availables\n"
     c_help += "cores on the system."
