@@ -198,7 +198,6 @@ def get_hardware_details():
 ## @author LE FLEM Erwan
 #
 #  @brief Retrieve the version of the libc on this machine.
-#  @details We retrieve the libc version using ldd and grep.
 #
 #  @retuns The libc version e.g 2.27
 def __get_libc_version():
@@ -254,7 +253,8 @@ def get_compilation_details():
                 brim[i] = line.split("=")[1][1:-1]  # format : OPTION=value
                 i += 1
     except EnvironmentError:
-        tcom.pprint(4, "Unable to find {}".format(tset.CONF_FILE))
+        # tcom.pprint(4, "Unable to find {}".format(tset.CONF_FILE))
+        pass
 
     comp = {
         "tuxml_version": __get_tuxml_version(),
@@ -316,17 +316,17 @@ def environment_pprinter(env_details):
 #
 #  @return A dictionary with the keys listed above
 def get_environment_details():
-    tcom.pprint(2, "Getting environment details")
+    # tcom.pprint(2, "Getting environment details")
     env = {
         "system": get_os_details(),
         "hardware": get_hardware_details(),
         "compilation": get_compilation_details()
     }
 
-    if tset.VERBOSE > 1:
-        environment_pprinter(env)
+    # if tset.VERBOSE > 1:
+    environment_pprinter(env)
 
-    export_as_csv(env["system"], env["hardware"], env["compilation"])
+    # export_as_csv(env["system"], env["hardware"], env["compilation"])
 
     return env
 
@@ -351,4 +351,3 @@ def overlay_to_partition():
 
 if __name__ == '__main__':
     env = get_environment_details()
-    print(env, flush=True)
